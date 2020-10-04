@@ -29,7 +29,7 @@ Configuration is completely managed through Jenkins configuration as code plugin
 ### Before running jenkins playbook
 - Copy kubeconfig file to user home directory path("~/.kube/config") if not already present.
 - Update below variables in jenkins inventory file
-  * kubernetes api server address
+  * **kubernetes_api** - kubernetes api server address
   * **kubeconfig_file** - Convert file into base64 format before adding to inventory. 
    ```
    cat ~/.kube/config | base64 -w 0
