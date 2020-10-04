@@ -171,6 +171,7 @@ def data_loading_test(){
 }
 
 node('jenkins-slave') {
+    properties([[$class: 'JiraProjectProperty'], disableConcurrentBuilds(), gitLabConnection('')])
     try {
         stage('Checkout source code') {
             git 'https://github.com/vivekreddy94/elk-kubernetes.git'
