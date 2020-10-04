@@ -57,7 +57,7 @@ ansible-playbook jenkins.yml -i inventories/stage --ask-vault-pass
 Elasticsearch, logstash, kibana and filebeats together are ELK stack. Installation includes three pod elasticsearch cluster, two logstash, one Kibana and one filebeat.
 Below is the architecture of ELK setup.
 
-![ELK Setup](https://github.com/vivekreddy94/document/blob/main/elk_architecture.png)
+![ELK Setup](https://github.com/vivekreddy94/elk-kubernetes/blob/master/images/elk_architecture.png)
 
 ### Overview of setup
 **Elasticsearch**: Three pod elasticsearch cluster is installed where they all talk to eachother to maintain replicas of incoming data and indices. As it is stateful application with requirement of persistent data, 'statefulsets' object is used which creates unique persisten identifier and recreates the pod with same identifier on failures. For data storage, persistent volumes are created and claimed through statefulset. Configuration is loaded to elasticsearch through configmaps.
@@ -69,7 +69,7 @@ Below is the architecture of ELK setup.
 **filebeat**: One pod filebeat is installed to gather logs from docker containers and send it to logstash. For deploying filebeat 'daemonset' object is used as we want to pod to run all kubernetes cluster nodes. In this case only one pod is deployed, but on addition of new nodes to kuberenetes cluster, daemonset takes care of initiating pod on new nodes.
 
 ## ELK deployment strategy
-![ELK stack deployment](https://github.com/vivekreddy94/document/blob/main/elk_jenkins_deploy.png)
+![ELK stack deployment](https://github.com/vivekreddy94/elk-kubernetes/blob/master/images/elk_jenkins_deploy.png)
 
 Workflow of ELK stack deployment in relation to above image
 1. Github notifies Jenkins elk CICD pipeline job on a new commit.
@@ -81,7 +81,7 @@ Workflow of ELK stack deployment in relation to above image
 ### CICD Pipeline
 Below explains the steps performed in each stage of pipeline.
 
-![Pipeline stages](https://github.com/vivekreddy94/document/blob/main/cicd_arch.png)
+![Pipeline stages](https://github.com/vivekreddy94/elk-kubernetes/blob/master/images/cicd_arch.png)
 
 #### Checkout
 Checks out elk stack github repo.
@@ -91,7 +91,7 @@ Checks the slave if required packages ansible, kubectl, docker, kubeval and pola
 
 #### Setup requirements
 * Copies the kubeconfig file from jenkins credentails to home directory in jenkins slave.
-* Executes kubernetes-lingting.yml playbook to copy ELK stack kubernetes files to slave node and make it ready for [Validate kubernetes code](https://github.com/vivekreddy94/document/blob/main/README.md#validate-kubernetes-code) stage
+* Executes kubernetes-lingting.yml playbook to copy ELK stack kubernetes files to slave node and make it ready for [Validate kubernetes code](https://github.com/vivekreddy94/elk-kubernetes#validate-kubernetes-code) stage
 
 #### Perform ansible linting
 * Builds a custom ansible-lint docker image by coping ansible files into the image
@@ -151,7 +151,7 @@ ansible-playbook elk_stack.yml -i inventories/stage --extra-vars "install_action
 ```
 ansible-playbook elk_stack.yml -i inventories/production
 ```
-Note: Kubeconfig file of production cluster should be loaded here, but as it is a single node cluster kubeconfig file loaded in [Setup requirements](https://github.com/vivekreddy94/document/blob/main/README.md#setup-requirements) stage will be reused.
+Note: Kubeconfig file of production cluster should be loaded here, but as it is a single node cluster kubeconfig file loaded in [Setup requirements](https://github.com/vivekreddy94/elk-kubernetes#setup-requirements) stage will be reused.
 
 
 
