@@ -1,0 +1,5 @@
+namespace: elk
+kubeconfig_path: ~/.kube/config
+inventory: stage
+install_action: present
+kubernetes_api: "https://10.0.0.5:16443"

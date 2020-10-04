@@ -1,0 +1,40 @@
+input {
+  beats {
+    port => 5044
+    add_field => { "environment" => "{{ logstash.environment }}" "project" => "{{ logstash.project }}" }
+    tags => "filebeat"
+  }
+{% if logstash.environment == "stage" %}
+  http {
+    tags => "http_test"
+  }
+{% endif %}
+}
+filter {
+  if [message] =~ /^\{.*\}$/ {
+    json {
+      source => "message"
+    }
+  }
+  if [ClientHost] {
+    geoip {
+      source => "ClientHost"
+    }
+  }
+}
+output {
+  if "filebeat" in [tags] {
+    elasticsearch {
+        hosts => [ "{{ elasticsearch.service_name }}:{{ elasticsearch.httpport }}" ]
+        index => "logstash_index"
+    }
+  }
+{% if logstash.environment == "stage" %}
+  else if "http_test" in [tags] {
+    file {
+        path => ["/tmp/output.log"]
+    }
+  }
+{% endif %}
+}
+

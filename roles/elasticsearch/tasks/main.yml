@@ -1,0 +1,95 @@
+- name: Create storage class for elastic
+  k8s:
+    state: present
+    definition:
+      apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: "{{ elasticsearch.storage_class }}"
+      provisioner: kubernetes.io/no-provisioner
+      volumeBindingMode: WaitForFirstConsumer
+    kubeconfig: "{{ kubeconfig_path }}"
+
+- name: Create Service Account
+  k8s:
+    state: "{{ install_action | default('present') }}"
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "{{ elasticsearch.app }}"
+        namespace: "{{ namespace }}"
+        labels:
+          app: "{{ elasticsearch.app }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+
+- name: Create persistent volumes
+  k8s:
+    state: "{{ install_action | default('present') }}"
+    definition:
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        name: "{{ item.name }}"
+        labels:
+          type: local
+      spec:
+        storageClassName: "{{ elasticsearch.storage_class }}"
+        capacity:
+          storage: "{{ elasticsearch.storage_size }}"
+        accessModes:
+          - ReadWriteMany
+        hostPath:
+          path: "{{ item.path }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+  loop: "{{ elasticsearch_pv }}"
+
+- name: Create cluster role binding
+  k8s:
+    state: "{{ install_action | default('present') }}"
+    definition: "{{ lookup('template', 'elasticsearch-role-binding.yml.j2') }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+
+- name: Create config map for elasticsearch configuration file
+  k8s:
+    state: "{{ install_action | default('present') }}"
+    definition: "{{ lookup('template', 'elasticsearch-config-map.yml.j2') }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+
+- name: Create statefulset set for elasticsearch
+  k8s:
+    state: "{{ install_action | default('present') }}"
+    definition: "{{ lookup('template', 'elasticsearch-statefulset.yml.j2') }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+
+- name: Create service for elasticsearch
+  k8s:
+    state: "{{ install_action | default('present') }}"
+    definition: "{{ lookup('template', 'elasticsearch-svc.yml.j2') }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+
+- name: Delete PVC
+  command: "kubectl delete pvc -n {{ namespace }} --all"
+  when: install_action == "absent"
+
+- name: Create pods for deleting  mounted volumes
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'elasticsearch-delete-volume-mounts.yml.j2') }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+  vars:
+    mount_path: "{{ item.path }}"
+    name: "{{ item.name }}"
+  loop: "{{ elasticsearch_pv }}"
+  when: install_action == "absent"
+
+- name: Delete pods created for deleting mounted volumes
+  k8s:
+    state: absent
+    definition: "{{ lookup('template', 'elasticsearch-delete-volume-mounts.yml.j2') }}"
+    kubeconfig: "{{ kubeconfig_path }}"
+  vars:
+    mount_path: "{{ item.path }}"
+    name: "{{ item.name }}"
+  loop: "{{ elasticsearch_pv }}"
+  when: install_action == "absent"
