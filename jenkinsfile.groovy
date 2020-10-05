@@ -100,10 +100,14 @@ def logstash_testing(){
                 kubectl exec ${pod_name} -n elk -- rm -f /tmp/output.log
                 kubectl cp test_data/logstash/logstash_test_data ${pod_name}:/tmp/logstash_test_data -n elk
                 kubectl exec ${pod_name} -n elk -- curl -H \"content-type: application/json\" -XPUT \'http://127.0.0.1:8080/twitter/tweet/1\' -d \"@/tmp/logstash_test_data\"
-                echo "#### Check if output log is created #####"
-                kubectl exec ${pod_name} -n elk -- ls -l /tmp/output.log
                 """
             )
+            sleep(30)
+            sh(script: """
+               echo "#### Check if output log is created ####"
+               kubectl exec ${pod_name} -n elk -- ls -l /tmp/output.log
+               """
+              )
         }
         catch(Exception e){
             print_debug_output("logstash")
