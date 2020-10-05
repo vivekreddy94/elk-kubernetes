@@ -47,11 +47,13 @@ spec:
           exec:
             command: ["filebeat", "test", "output", "-c", "/etc/filebeat.yml"]
           periodSeconds: 30
+          timeoutSeconds: 5
         startupProbe:
           exec:
             command: ["filebeat", "test", "output", "-c", "/etc/filebeat.yml"]
           failureThreshold: 30
           periodSeconds: 20
+          timeoutSeconds: 5
         volumeMounts:
         - name: config
           mountPath: /etc/filebeat.yml
