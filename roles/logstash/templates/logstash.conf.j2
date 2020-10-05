@@ -1,7 +1,7 @@
 input {
   beats {
     port => 5044
-    add_field => { "environment" => "{{ logstash.environment }}" "project" => "{{ logstash.project }}" "cicd" => "added" }
+    add_field => { "environment" => "{{ logstash.environment }}" "project" => "{{ logstash.project }}" "cicd" => "newlabel" }
     tags => "filebeat"
   }
 {% if logstash.environment == "stage" %}
